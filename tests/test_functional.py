@@ -336,6 +336,30 @@ class FunctionalParserTests(unittest.TestCase):
         self.assertEqual(params.name, "John Doe")
         self.assertEqual(params.age, 3)
 
+    def test_datetime_arg(self):
+        @dataclass
+        class Options:
+            date: dt.date
+            value: int
+            seed: bytes
+
+        args = ["--date", "2020-01-01", "--value", "0x123", "--seed", "DEADBEEF"]
+        params = parse_args(Options, args)
+        
+        args = ["--date", "2020-01-01", "--value", "10_123", "--seed", "DEADBEEF"]
+        params = parse_args(Options, args)
+        
+        args = ["--date", "2020-01-01", "--value", "0b1111", "--seed", "DEADBEEF"]
+        params = parse_args(Options, args)
+        
+        args = ["--date", "2020-01-01", "--value", "0o1111", "--seed", "DEADBEEF"]
+        params = parse_args(Options, args)
+
+
+        #    cutoff_date: dt.datetime = field(
+        #        metadata=dict(type=dt.datetime.fromisoformat),
+        #    )
+        ...
 
 if __name__ == "__main__":
     unittest.main()

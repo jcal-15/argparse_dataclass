@@ -249,6 +249,9 @@ from dataclasses import (
 )
 from importlib.metadata import version
 
+from functools import partial
+from datetime import datetime, date
+
 if hasattr(argparse, "BooleanOptionalAction"):
     # BooleanOptionalAction was added in Python 3.9
     BooleanOptionalAction = argparse.BooleanOptionalAction
@@ -337,7 +340,7 @@ def _add_dataclass_options(
         args = field.metadata.get("args", [f"--{_get_arg_name(field)}"])
         positional = not args[0].startswith("-")
         kwargs = {
-            "type": field.metadata.get("type", field.type),
+            "type": _get_type_conversion(field),
             "help": field.metadata.get("help", None),
         }
 
@@ -423,7 +426,20 @@ def _add_dataclass_options(
         else:
             parser.add_argument(*args, **kwargs)
 
-
+def _get_type_conversion(field: Field):
+    type_conversion = field.metadata.get("type")
+    if type_conversion is not None:
+        return type_conversion
+    if field.type is date:
+        return date.fromisoformat
+    if field.type is datetime:
+        return datetime.fromisoformat
+    if field.type is int:
+        return partial(int, base=0)
+    if field.type is bytes:
+        return bytes.fromhex
+    return field.type
+    
 def _get_kwargs(namespace: argparse.Namespace) -> Dict[str, Any]:
     """Converts a Namespace to a dictionary containing the items that
     to be used as keyword arguments to the Options class.
